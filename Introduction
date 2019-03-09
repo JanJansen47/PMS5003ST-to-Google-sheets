@@ -1,0 +1,9 @@
+Publish the readings of a PMS5003ST G5ST Sensor Module PM2.5 Formaldehyde Temperature and Humidity laser 
+Sensor Digital Module in Google sheets (In the Google Drive).
+
+The solution is based on an ESP8266 NodeMCU module using Arduino "C" and The Google scripts provided in Google sheets.
+
+The solution is based on the work of  https://github.com/electronicsguy/ESP8266/blob/master/HTTPSRedirect/GoogleDocs.ino 
+for the HTTPSRedirect and 
+
+https://github.com/tzapu/WiFiManager for the WiFi manager
