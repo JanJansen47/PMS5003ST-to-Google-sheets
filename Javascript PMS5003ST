@@ -1,0 +1,199 @@
+
+/*  Javascript voor de  fijnestofmeter
+Jan Jansen
+02-03-2019 */
+
+var ss = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1QBWDHVbN2WkUUe8nGUZih8Hw1gqX-bA7hqCTa4lbDF4/edit");  // TestMeter
+var summarySheet = ss.getSheetByName("Summary");
+var tijd;
+var Unit = "1";
+
+// This method will be called first or hits first  
+function doPost(e){
+  if(typeof e !== 'undefined')
+  Logger.log(e.parameter);
+    
+  try {
+var json = JSON.parse(e.postData.contents);
+    console.log(json);    
+    save_data(  json);
+  
+    // prepare response to esp8266 (Cloud info)
+    response_1Text= summarySheet.getRange("A18").getValue();
+    response_1Value= summarySheet.getRange("B18").getValue();
+    response_2Text= summarySheet.getRange("A19").getValue();
+    response_2Value= summarySheet.getRange("B19").getValue();
+    response_3Text= summarySheet.getRange("A20").getValue();
+    response_3Value= summarySheet.getRange("B20").getValue();
+    response_4Text= summarySheet.getRange("A21").getValue();
+    response_4Value= summarySheet.getRange("B21").getValue();
+    response_4Value ++;
+    summarySheet.getRange("B21").setValue(response_4Value);
+    response_5Value = summarySheet.getRange("B23").getValue();
+
+    //return Cloud info to esp8266
+    return ContentService.createTextOutput("Wrote:\n" + response_1Text + " " + response_1Value + "\n"+  response_2Text + " " + response_2Value + "\n"+ response_3Text + " " + response_3Value + "\n"+ response_4Text + " " + response_4Value +"\n" + response_5Value );
+ 
+  } catch(error) { 
+    Logger.log(error);                      
+    return ContentService.createTextOutput("oei!!.." + error.message + "\n" + new Date());
+  }  
+}
+
+// Method to save given data to a sheet
+function save_data( json ){
+  Logger.log("--- save_data ---");     
+
+  try {
+    
+    var dateTime = new Date();
+    var hrs = dateTime.getHours();
+    var min = dateTime.getMinutes();
+    var sec = dateTime.getSeconds();
+    var dag = dateTime.getDay();
+    var date =dateTime.getDate();
+   
+
+    var dataLoggerSheet = ss.getSheetByName("DataLogger");
+    var longSheet = ss.getSheetByName("Long");
+    var longTempSheet = ss.getSheetByName("LongTemp");
+    var weekSortSheet = ss.getSheetByName("weekSort");
+    var weekTimeSheet = ss.getSheetByName("weekTime");
+    // Get last edited row from DataLogger sheet
+    var row =     dataLoggerSheet.getLastRow() + 1;
+    var rowlong = longSheet.getLastRow() + 1;
+    var rowlongtemp = longTempSheet.getLastRow();
+    //var rowWeekSort = weekSortSheet.getLastRow()+1;
+    var rowweekTime = weekTimeSheet.getLastRow();   
+  
+    
+  
+    // populate longSheet met een waarde per hieronder aangegeven tijd per dag.
+    if (summarySheet.getRange("B5").getValue()== 0){ // check already one value stored in longSheet
+    if(hrs ==07 || hrs== 15 || hrs== 23 || hrs== 10) {  // hours to be stored
+    
+      // Start Populating the logdata sheet
+    longSheet.getRange("A" + rowlong).setValue(rowlong -1); // ID
+    longSheet.getRange("B" + rowlong).setValue(dateTime); // dateTime
+    longSheet.getRange("D" + rowlong).setValue(parseFloat(json.values[0])); // value
+    longSheet.getRange("E" + rowlong).setValue(parseFloat(json.values[1])); // value
+    longSheet.getRange("F" + rowlong).setValue(json.values[2]); // value
+    longSheet.getRange("G" + rowlong).setValue(json.values[3]); // value
+    longSheet.getRange("H" + rowlong).setValue(json.values[4]); // value
+    longSheet.getRange("I" + rowlong).setValue(json.values[5]); // value
+   
+    summarySheet.getRange("B5").setValue(1); // indicate "semaphore"stored dwz gedaan 
+  };
+      
+    };
+    
+   if(hrs !=07 && hrs!= 15 && hrs!= 23 && hrs!= 10) { 
+    summarySheet.getRange("B5").setValue(0); // free storage of longSheet values
+   }
+ 
+    //start populating de LongTemp Sheet
+    // Eerst checken we  7 uur smorgens
+    if (summarySheet.getRange("B14").getValue()== 0){ // check already one value voor 7 uur  stored in longTimeSheet
+    if(hrs ==07 ) {  // hours to be stored
+     // Start Populating the logdata sheet
+    rowlongtemp = rowlongtemp+1;  // begin met een nieuwe row als het 7 uur smorgens is  
+    longTempSheet.getRange("A" + rowlongtemp).setValue(rowlong -1); // ID
+    longTempSheet.getRange("B" + rowlongtemp).setValue(dateTime); // dateTime
+    longTempSheet.getRange("D" + rowlongtemp).setValue(parseFloat(json.values[0])); // value
+    longTempSheet.getRange("E" + rowlongtemp).setValue(parseFloat(json.values[1])); // value
+    summarySheet.getRange("B14").setValue(1); // indicate "semaphore"stored dwz gedaan 
+  };
+     
+    }; 
+    
+     // Daarna checken we  10 uur smorgens
+    if (summarySheet.getRange("C14").getValue()== 0){ // check already one value voor 7 uur  stored in longTimeSheet
+    if(hrs ==10 ) {  // hours to be stored
+     // Start Populating the logdata sheet
+    // begin met een nieuwe row als het 7 uur smorgens is  
+      longTempSheet.getRange("F" + rowlongtemp).setValue(parseFloat(json.values[0])); // value
+      longTempSheet.getRange("G" + rowlongtemp).setValue(parseFloat(json.values[1])); // value
+    summarySheet.getRange("C14").setValue(1); // indicate "semaphore"stored dwz gedaan 
+  };
+     
+    };    
+    
+   // Daarna checken we  15 uur smiddags
+    if (summarySheet.getRange("D14").getValue()== 0){ // check already one value voor 7 uur  stored in longTimeSheet
+    if(hrs ==15 ) {  // hours to be stored
+     // Start Populating the logdata sheet
+    // begin met een nieuwe row als het 7 uur smorgens is  
+      longTempSheet.getRange("H" + rowlongtemp).setValue(parseFloat(json.values[0])); // value
+      longTempSheet.getRange("I" + rowlongtemp).setValue(parseFloat(json.values[1])); // value
+    summarySheet.getRange("D14").setValue(1); // indicate "semaphore"stored dwz gedaan 
+  };
+     
+    };    
+    
+     // Daarna checken we  23 uur savonds
+    if (summarySheet.getRange("E14").getValue()== 0){ // check already one value voor 7 uur  stored in longTimeSheet
+    if(hrs ==23 ) {  // hours to be stored
+     // Start Populating the logdata sheet
+    // begin met een nieuwe row als het 7 uur smorgens is  
+      longTempSheet.getRange("J" + rowlongtemp).setValue(parseFloat(json.values[0])); // value
+      longTempSheet.getRange("K" + rowlongtemp).setValue(parseFloat(json.values[1])); // value
+    summarySheet.getRange("E14").setValue(1); // indicate "semaphore"stored dwz gedaan 
+  };
+     
+    };    
+ 
+    
+    
+   if(hrs !=07 && hrs!= 15 && hrs!= 23 && hrs!= 10) { 
+    summarySheet.getRange("B14").setValue(0); // free storage of longSheet values  7 uur
+    summarySheet.getRange("C14").setValue(0); // free storage of longSheet values  10 uur
+    summarySheet.getRange("D14").setValue(0); // free storage of longSheet values  15 uur
+    summarySheet.getRange("E14").setValue(0); // free storage of longSheet values  23 uur
+   }
+  
+    // Start Populating the DataLoggerSheet
+    if (summarySheet.getRange("B6").getValue()== 1){ // check
+    dataLoggerSheet.insertRows(2);   // insert new value in row 2
+    dataLoggerSheet.getRange("A" + 2).setValue(Unit)
+    dataLoggerSheet.getRange("B" + 2).setValue(dateTime); // dateTime
+    dataLoggerSheet.getRange("D" + 2).setValue(parseFloat(json.values[0])); // value
+    dataLoggerSheet.getRange("E" + 2).setValue(parseFloat(json.values[1])); // value
+    dataLoggerSheet.getRange("F" + 2).setValue(json.values[2]); // value
+    dataLoggerSheet.getRange("G" + 2).setValue(json.values[3]); // value
+    dataLoggerSheet.getRange("H" + 2).setValue(json.values[4]); // value
+    dataLoggerSheet.getRange("I" + 2).setValue(json.values[5]); // value
+
+    dataLoggerSheet.deleteRow(summarySheet.getRange("B11").getValue());  // instellen in summary sheet B11
+    }
+   
+    // Start populating the weekTimeSheet
+     var index = dag*24 + hrs+2; // bereken  plaats in de sheet
+    if (weekTimeSheet.getRange("A2").getValue() != index) {
+   // max_row = 1+ summarySheet.getRange("B10").getValue()* 7*24; // rekent het aantal row voor de weken uit.
+    weekTimeSheet.insertRows(2);
+    weekTimeSheet.getRange("A" + 2).setValue(index); // ID
+    weekTimeSheet.getRange("B" + 2).setValue(dateTime); // dateTime
+    weekTimeSheet.getRange("D" + 2).setValue(parseFloat(json.values[0])); // value
+    weekTimeSheet.getRange("E" + 2).setValue(parseFloat(json.values[1])); // value
+    weekTimeSheet.getRange("F" + 2).setValue(json.values[2]); // value
+    weekTimeSheet.getRange("G" + 2).setValue(json.values[3]); // value
+    weekTimeSheet.getRange("H" + 2).setValue(json.values[4]); // value
+    weekTimeSheet.getRange("I" + 2).setValue(json.values[5]); // value
+
+    weekTimeSheet.deleteRow(summarySheet.getRange("B10").getValue()*7*24);  //  7 dagen en 24 metingen per dag = 168 rows. Daarna deleten
+  }
+  
+    // Update summary sheet
+    summarySheet.getRange("B1").setValue(dateTime); // Last modified date
+    summarySheet.getRange("B2").setValue(row - 1); // Count 
+    summarySheet.getRange("B4").setValue(rowlong - 1); // Count 
+   
+   
+  }
+ 
+  catch(error) {
+    Logger.log(JSON.stringify(error));
+  }
+ 
+  Logger.log("--- save_data end---"); 
+}
